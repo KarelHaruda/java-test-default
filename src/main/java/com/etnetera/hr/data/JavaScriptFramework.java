@@ -37,7 +37,10 @@ public class JavaScriptFramework {
 	
 	private Date deprecationDate;
 	
-	private int hypeLevel;
+	
+	//HyepeLevel mùže být uložen 
+//	private int hypeLevel;
+	private EHypeLevel hypeLevel;
 	
 	public JavaScriptFramework() {
 	}
@@ -47,14 +50,19 @@ public class JavaScriptFramework {
 	}
 
 	public JavaScriptFramework(String name, Date depricationDate) {
-		this(name, depricationDate, 0);
+		this(name, depricationDate, EHypeLevel.NONE);
 	}
 
-	public JavaScriptFramework(String name, Date depricationDate, int hypeLevel) {
-		this.name = name;
+	public JavaScriptFramework(String name, Date depricationDate, EHypeLevel hypeLevel) {
+		this.name = name;  
 		setDeprecationDate(depricationDate);
 		setHypeLevel(hypeLevel);
 	}
+//	public JavaScriptFramework(String name, Date depricationDate, int hypeLevel) {
+//		this.name = name;
+//		setDeprecationDate(depricationDate);
+//		setHypeLevel(hypeLevel);
+//	}
 
 	public Long getId() {
 		return id;
@@ -85,13 +93,21 @@ public class JavaScriptFramework {
 		this.deprecationDate = deprecationDate;
 	}
 
-	public int getHypeLevel() {
+	public EHypeLevel getHypeLevel() {
 		return hypeLevel;
 	}
 	
-	public void setHypeLevel(int hypeLevel) {
+	public void setHypeLevel(EHypeLevel hypeLevel) {
 		this.hypeLevel = hypeLevel;
 	}
+	
+//	public int getHypeLevel() {
+//		return hypeLevel;
+//	}
+//	
+//	public void setHypeLevel(int hypeLevel) {
+//		this.hypeLevel = hypeLevel;
+//	}
 	
 	@Override
 	public String toString() {

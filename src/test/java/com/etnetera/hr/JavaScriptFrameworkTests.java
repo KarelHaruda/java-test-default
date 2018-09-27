@@ -1,5 +1,6 @@
 package com.etnetera.hr;
 
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -9,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.TimeZone;
 
 import org.junit.Test;
@@ -20,7 +20,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
+import com.etnetera.hr.data.EHypeLevel;
 import com.etnetera.hr.data.JavaScriptFramework;
 import com.etnetera.hr.repository.JavaScriptFrameworkRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -51,7 +53,8 @@ public class JavaScriptFrameworkTests {
 		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
 		cal.clear();
 		cal.set(2020, 10, 1, 0, 0, 0);
-		JavaScriptFramework react = new JavaScriptFramework("ReactJS", cal.getTime(), 50);
+//		JavaScriptFramework react = new JavaScriptFramework("ReactJS", cal.getTime(), 50);
+		JavaScriptFramework react = new JavaScriptFramework("ReactJS", cal.getTime(), EHypeLevel.MEDIUM);
 		react.getVersions().add("0.9RC-1");
 		react.getVersions().add("1.0");
 		repository.save(react);
@@ -64,22 +67,32 @@ public class JavaScriptFrameworkTests {
 	@Test
 	public void frameworksTest() throws Exception {
 		prepareData();
-		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-		cal.clear();
-		cal.set(2020, 10, 1, 0, 0, 0);
-		Date depDate1 = cal.getTime();
 		
 		mockMvc.perform(get("/frameworks")).andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+				.andDo(MockMvcResultHandlers.print())
 				.andExpect(jsonPath("$", hasSize(2)))
 				.andExpect(jsonPath("$[0].versions", hasSize(2)))
 				.andExpect(jsonPath("$[0].id", is(1)))
 				.andExpect(jsonPath("$[0].name", is("ReactJS")))
-				.andExpect(jsonPath("$[0].hypeLevel",  is(50)))
-				.andExpect(jsonPath("$[0].deprecationDate",  is(depDate1)))
+				//Zde si nejsem úplnì jistý jestli takto otestováno staèí. Jde totiž o to že jsonPath("$[0].hypeLevel" pøeète String a tudíž to nelze porovnávat na EHypeLevel
+				//proto se zde porovnává na EHypeLevel.XXXX.name() což je vlastnì to co je v té JSON odpovìdi, kterou zde testujeme uloženo
+				//pravdìpodobnì by se nechal vytoøit správný Enum ze stringu z použitím Enum.valueOf(EHypeLevel.class, name), ale pro úèely testování by porovnání tìch dvou textù mìlo být dostaèující
+				.andExpect(jsonPath("$[0].hypeLevel",  is(EHypeLevel.MEDIUM.name())))
+				
+				//Toto je test pro pøípad že by byl HypeLevel integer 
+//				.andExpect(jsonPath("$[0].hypeLevel",  is(50)))
+				
+				//Stejná situace jako u EHypeLevel - porovnávání probíhá jako String pøeètený z JSON. Proto je to zde porovnáváno na námi oèekávaný string.
+				//Jinak by se musel string parsovat do Timestamp a pak dále porovnávat proti Timestamp. Opìt si myslím že pro úèel unit testù je toto dostaèující aby to odhalilo 
+				//pøípadnou zavleèenou chybu 
+				.andExpect(jsonPath("$[0].deprecationDate",  is("2020-11-01T00:00:00.000+0000")))
+				//test na poèet verzí
+				.andExpect(jsonPath("$[1].versions", hasSize(1)))
 				.andExpect(jsonPath("$[0].versions[0]", is("0.9RC-1")))
 				.andExpect(jsonPath("$[0].versions[1]", is("1.0")))
-				.andExpect(jsonPath("$[1].versions", hasSize(1)))
 				.andExpect(jsonPath("$[1].id", is(2)))
+				.andExpect(jsonPath("$[1].hypeLevel",  is(EHypeLevel.NONE.name())))
+				.andExpect(jsonPath("$[1].deprecationDate",  nullValue()))
 				.andExpect(jsonPath("$[1].versions[0]", is("2018-01-01")))
 				.andExpect(jsonPath("$[1].name", is("Vue.js")));
 	}
@@ -88,6 +101,10 @@ public class JavaScriptFrameworkTests {
 	public void addFrameworkInvalid() throws JsonProcessingException, Exception {
 		JavaScriptFramework framework = new JavaScriptFramework();
 		mockMvc.perform(post("/add").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(framework)))
+				.andDo(MockMvcResultHandlers.print())
+				//Zde je pravdìpodobnì chyba
+				//Request na url /add neskonèí na BadRequest (HTTP status code 400) ale skonèí kodem 404 NOT FOUND
+				//což zpùsobí že tento unit test celý skonèí chybou už zde na kontrole status().isBadRequest()
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.errors", hasSize(1)))
 				.andExpect(jsonPath("$.errors[0].field", is("name")))
@@ -95,11 +112,11 @@ public class JavaScriptFrameworkTests {
 		
 		framework.setName("verylongnameofthejavascriptframeworkjavaisthebest");
 		mockMvc.perform(post("/add").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(framework)))
+			.andDo(MockMvcResultHandlers.print())
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.errors", hasSize(1)))
 			.andExpect(jsonPath("$.errors[0].field", is("name")))
 			.andExpect(jsonPath("$.errors[0].message", is("Size")));
 		
 	}
-	
 }
