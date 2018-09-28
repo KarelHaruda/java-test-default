@@ -9,8 +9,13 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 
 import org.assertj.core.util.Lists;
+import org.springframework.util.StringUtils;
+
+import com.etnetera.hr.exceptions.InvalidObjectException;
 
 /**
  * Simple data entity describing basic properties of every JavaScript framework.
@@ -28,17 +33,18 @@ public class JavaScriptFramework {
 	@Column(nullable = false, length = 30)
 	private String name;
 
-	//Pro jednoduchou kolekci jako je seznam verzÌ lze pouûÌt toto
+	//Pro jednoduchou kolekci jako je seznam verz√≠ lze pou≈æ√≠t toto
 	@ElementCollection 
 	private List<String> versions = Lists.newArrayList();
-	//pokud by bylo t¯eba o verzi ukl·dat vÌce informacÌ jako nap¯. datum vyd·nÌ verze atd..
-	//pak by se musela pouûÌt dalöÌ entita napr. JavaScriptFrameworkVersion kter· by nesla vöechny tyto informace 
-	//a zde by bylo mapov·nÌ pravdÏpodobnÏ typu one-to-many na tuto entitu
+	//pokud by bylo t≈ôeba o verzi ukl√°dat v√≠ce informac√≠ jako nap≈ô. datum vyd√°n√≠ verze atd..
+	//pak by se musela pou≈æ√≠t dal≈°√≠ entita napr. JavaScriptFrameworkVersion kter√° by nesla v≈°echny tyto informace 
+	//a zde by bylo mapov√°n√≠ pravdƒõpodobnƒõ typu one-to-many na tuto entitu
 	
 	private Date deprecationDate;
 	
-	
-	//HyepeLevel m˘ûe b˝t uloûen 
+	//HyepeLevel m≈Ø≈æe b√Ωt ulo≈æen jako ƒç√≠slo a nebo jako Enum 
+	//prvnƒõ jsem to vyzkou≈°el s ƒç√≠slem a pak s Enumem.
+	//ƒç√≠slo m√° tu v√Ωhodu ≈æe ho lze
 //	private int hypeLevel;
 	private EHypeLevel hypeLevel;
 	
@@ -58,6 +64,7 @@ public class JavaScriptFramework {
 		setDeprecationDate(depricationDate);
 		setHypeLevel(hypeLevel);
 	}
+	
 //	public JavaScriptFramework(String name, Date depricationDate, int hypeLevel) {
 //		this.name = name;
 //		setDeprecationDate(depricationDate);
@@ -79,7 +86,6 @@ public class JavaScriptFramework {
 	public void setName(String name) {
 		this.name = name;
 	}
-
 	
 	public List<String> getVersions() {
 		return versions;
@@ -100,7 +106,8 @@ public class JavaScriptFramework {
 	public void setHypeLevel(EHypeLevel hypeLevel) {
 		this.hypeLevel = hypeLevel;
 	}
-	
+
+	//GET a SET metody pro pripad ze hype level je  integer
 //	public int getHypeLevel() {
 //		return hypeLevel;
 //	}
@@ -108,6 +115,27 @@ public class JavaScriptFramework {
 //	public void setHypeLevel(int hypeLevel) {
 //		this.hypeLevel = hypeLevel;
 //	}
+	
+	//protected metoda slouzici k validaci objektu pred jeho ulozenim 
+	//pripadni potomci mohou pridavat validaci vlastnich fieldu
+	protected void doValidate(ValidationResult result) {
+		if (StringUtils.isEmpty(name)) {
+			result.addValidationError("name", "NotEmpty");
+		} else if (name.length() > 30) {
+			result.addValidationError("name", "Size");			
+		}
+	}
+	
+	//metoda slouzi k overeni inegrity objektu (validace) pred jeho perzistenci
+	@PreUpdate
+    @PrePersist
+    private void validate() throws InvalidObjectException{
+		ValidationResult result = new ValidationResult();
+		doValidate(result);
+		if (!result.isValid()) {
+			throw new InvalidObjectException(result);
+		}
+	}
 	
 	@Override
 	public String toString() {

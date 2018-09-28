@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.etnetera.hr.data.JavaScriptFramework;
+import com.etnetera.hr.exceptions.InvalidObjectException;
 import com.etnetera.hr.repository.JavaScriptFrameworkRepository;
 
 /**
@@ -27,14 +28,15 @@ public class JavaScriptFrameworkController extends EtnRestController {
 		this.repository = repository;
 	}
 
-
 	@PostMapping("/add")  
-    public ResponseEntity<?> addFrameword(@RequestBody JavaScriptFramework framework) {
+    public ResponseEntity<?> addJavaSriptFrameword(@RequestBody JavaScriptFramework framework) {
 		try {
+			//Pokusime se ulozit predany objekt
 			repository.save(framework);			
 			return ResponseEntity.status(HttpStatus.CREATED).body(framework);
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+		} catch (InvalidObjectException e) {
+			//pokud to selze na chybu odpoved bude BAD REQUEST a v body bude popis chyby tak jak to vyzaduje unit test
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getValidationResult());
 		}
     }
  	

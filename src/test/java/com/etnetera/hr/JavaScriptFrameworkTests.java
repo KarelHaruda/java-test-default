@@ -74,19 +74,21 @@ public class JavaScriptFrameworkTests {
 				.andExpect(jsonPath("$[0].versions", hasSize(2)))
 				.andExpect(jsonPath("$[0].id", is(1)))
 				.andExpect(jsonPath("$[0].name", is("ReactJS")))
-				//Zde si nejsem úplnì jistı jestli takto otestováno staèí. Jde toti o to e jsonPath("$[0].hypeLevel" pøeète String a tudí to nelze porovnávat na EHypeLevel
-				//proto se zde porovnává na EHypeLevel.XXXX.name() co je vlastnì to co je v té JSON odpovìdi, kterou zde testujeme uloeno
-				//pravdìpodobnì by se nechal vytoøit správnı Enum ze stringu z pouitím Enum.valueOf(EHypeLevel.class, name), ale pro úèely testování by porovnání tìch dvou textù mìlo bıt dostaèující
+				//Zde si nejsem ÃºplnÄ› jistÃ½ jestli takto otestovÃ¡no staÄÃ­. Jde totiÅ¾ o to Å¾e jsonPath("$[0].hypeLevel" pÅ™eÄte String a tudÃ­Å¾ to nelze porovnÃ¡vat na EHypeLevel
+				//proto se zde porovnÃ¡vÃ¡ na EHypeLevel.XXXX.name() coÅ¾ je vlastnÄ› to co je v tÃ© JSON odpovÄ›di, kterou zde testujeme uloÅ¾eno
+				//pravdÄ›podobnÄ› by se nechal vytoÅ™it sprÃ¡vnÃ½ Enum ze stringu z pouÅ¾itÃ­m Enum.valueOf(EHypeLevel.class, text_z_Json), 
+				//ale pro ÃºÄely testovÃ¡nÃ­ by porovnÃ¡nÃ­ tÄ›ch dvou stringÅ¯ mÄ›lo bÃ½t plnÄ› dostaÄujÃ­cÃ­
 				.andExpect(jsonPath("$[0].hypeLevel",  is(EHypeLevel.MEDIUM.name())))
 				
-				//Toto je test pro pøípad e by byl HypeLevel integer 
+				//Toto je test pro pÅ™Ã­pad Å¾e by byl HypeLevel integer 
 //				.andExpect(jsonPath("$[0].hypeLevel",  is(50)))
 				
-				//Stejná situace jako u EHypeLevel - porovnávání probíhá jako String pøeètenı z JSON. Proto je to zde porovnáváno na námi oèekávanı string.
-				//Jinak by se musel string parsovat do Timestamp a pak dále porovnávat proti Timestamp. Opìt si myslím e pro úèel unit testù je toto dostaèující aby to odhalilo 
-				//pøípadnou zavleèenou chybu 
+				//StejnÃ¡ situace jako u EHypeLevel - porovnÃ¡vÃ¡nÃ­ probÃ­hÃ­ jako String pÅ™eÄtenÃ½ z JSON. Proto je to zde porovnÃ¡vÃ¡no na nÃ¡mi oÄekÃ¡vanÃ½ string.
+				//Jinak by se musel string parsovat do Timestamp a pak dÃ¡le porovnÃ¡vat proti Timestamp. 
+				//OpÄ›t si myslÃ­m Å¾e pro ÃºÄel unit testÅ¯ je toto dostaÄujÃ­cÃ­ aby to odhalilo 
+				//pÅ¾Ã­padnou zavleÄenou chybu 
 				.andExpect(jsonPath("$[0].deprecationDate",  is("2020-11-01T00:00:00.000+0000")))
-				//test na poèet verzí
+				//test na poÄet verzÃ­ a jejich hodnoty
 				.andExpect(jsonPath("$[1].versions", hasSize(1)))
 				.andExpect(jsonPath("$[0].versions[0]", is("0.9RC-1")))
 				.andExpect(jsonPath("$[0].versions[1]", is("1.0")))
@@ -102,9 +104,11 @@ public class JavaScriptFrameworkTests {
 		JavaScriptFramework framework = new JavaScriptFramework();
 		mockMvc.perform(post("/add").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(framework)))
 				.andDo(MockMvcResultHandlers.print())
-				//Zde je pravdìpodobnì chyba
-				//Request na url /add neskonèí na BadRequest (HTTP status code 400) ale skonèí kodem 404 NOT FOUND
-				//co zpùsobí e tento unit test celı skonèí chybou u zde na kontrole status().isBadRequest()
+				//Request na url /add neskonÄil na BadRequest (HTTP status code 400) 
+				//ale skonÄil kodem 404 NOT FOUND
+				//coÅ¾ zpÅ¯soboivalo Å¾e tento unit test celÃ½ skonÄil chybou uÅ¾ zde na kontrole status().isBadRequest()
+				//Bylo nutnÃ© doimplementovat obsluhu REST endpointu /add a v dÃ¡le zaÅ™Ã­dit validaci objektu pÅ™ed uloÅ¾enÃ­m a
+				//pÅ™Ã­padnÃ© validaÄnÃ­ chyby pÅ™edat jako objekt do odpovÄ›di aby se to zde sprÃ¡vnÄ› otestovalo
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.errors", hasSize(1)))
 				.andExpect(jsonPath("$.errors[0].field", is("name")))
@@ -117,6 +121,5 @@ public class JavaScriptFrameworkTests {
 			.andExpect(jsonPath("$.errors", hasSize(1)))
 			.andExpect(jsonPath("$.errors[0].field", is("name")))
 			.andExpect(jsonPath("$.errors[0].message", is("Size")));
-		
 	}
 }
