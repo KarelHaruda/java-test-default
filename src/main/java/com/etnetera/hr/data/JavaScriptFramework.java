@@ -136,6 +136,18 @@ public class JavaScriptFramework {
 			throw new InvalidObjectException(result);
 		}
 	}
+
+	public boolean assing(JavaScriptFramework source) {
+		if (source != null) {
+			this.setName(source.getName());
+			this.setHypeLevel(source.getHypeLevel());
+			this.setDeprecationDate(source.getDeprecationDate());
+			this.getVersions().clear();
+			this.getVersions().addAll(source.getVersions());
+			return true;
+		}
+		return false;
+	}
 	
 	@Override
 	public String toString() {

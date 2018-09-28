@@ -1,10 +1,16 @@
 package com.etnetera.hr.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,10 +45,50 @@ public class JavaScriptFrameworkController extends EtnRestController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getValidationResult());
 		}
     }
- 	
+
+	@PutMapping("/frameworks/{ID}")  
+    public ResponseEntity<?> updateJavaSriptFrameword(@PathVariable(value="ID") String id, @RequestBody JavaScriptFramework framework) {
+		try {
+			JavaScriptFramework actualFramework = repository.findById(Long.valueOf(id)).get();
+			if(actualFramework == null) {
+				throw new RuntimeException(String.format("Framework with ID %s not found!", id));
+			}
+			actualFramework.assing(framework);
+			repository.save(actualFramework);		
+			return ResponseEntity.status(HttpStatus.OK).body(actualFramework);
+		} catch (InvalidObjectException e) {
+			//pokud to selze na chybu odpoved bude BAD REQUEST a v body bude popis chyby tak jak to vyzaduje unit test
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getValidationResult());
+		} catch (Exception e) {
+			//pokud to selze na chybu odpoved bude BAD REQUEST a v body bude popis chyby tak jak to vyzaduje unit test
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+		}
+    }
+	
 	@GetMapping("/frameworks")
 	public Iterable<JavaScriptFramework> frameworks() {
 		return repository.findAll();
+	}
+
+	@GetMapping("/search/{NAME}")
+	public Iterable<JavaScriptFramework> getFramework(@PathVariable(value="NAME") String name) {
+		List<JavaScriptFramework> result = new ArrayList<>();
+		for (JavaScriptFramework framework: repository.findAll()) {
+			if (framework.getName().contains(name)) {
+				result.add(framework);
+			}
+		}
+		return result;
+	}
+
+	@DeleteMapping("/frameworks/{ID}")
+	public ResponseEntity<?>  deleteFramework(@PathVariable(value="ID") String id) {
+		try {
+			repository.deleteById(Long.valueOf(id));			
+			return ResponseEntity.status(HttpStatus.OK).body(null);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());			
+		}
 	}
 
 }

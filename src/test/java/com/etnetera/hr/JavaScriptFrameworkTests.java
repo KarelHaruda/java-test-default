@@ -5,6 +5,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -71,7 +73,6 @@ public class JavaScriptFrameworkTests {
 		mockMvc.perform(get("/frameworks")).andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 				.andDo(MockMvcResultHandlers.print())
 				.andExpect(jsonPath("$", hasSize(2)))
-				.andExpect(jsonPath("$[0].versions", hasSize(2)))
 				.andExpect(jsonPath("$[0].id", is(1)))
 				.andExpect(jsonPath("$[0].name", is("ReactJS")))
 				//Zde si nejsem úplně jistý jestli takto otestováno stačí. Jde totiž o to že jsonPath("$[0].hypeLevel" přečte String a tudíž to nelze porovnávat na EHypeLevel
@@ -83,6 +84,10 @@ public class JavaScriptFrameworkTests {
 				//Toto je test pro případ že by byl HypeLevel integer 
 //				.andExpect(jsonPath("$[0].hypeLevel",  is(50)))
 				
+				.andExpect(jsonPath("$[0].versions", hasSize(2)))
+				.andExpect(jsonPath("$[0].versions[0]", is("0.9RC-1")))
+				.andExpect(jsonPath("$[0].versions[1]", is("1.0")))
+
 				//Stejná situace jako u EHypeLevel - porovnávání probíhí jako String přečtený z JSON. Proto je to zde porovnáváno na námi očekávaný string.
 				//Jinak by se musel string parsovat do Timestamp a pak dále porovnávat proti Timestamp. 
 				//Opět si myslím že pro účel unit testů je toto dostačující aby to odhalilo 
@@ -90,13 +95,71 @@ public class JavaScriptFrameworkTests {
 				.andExpect(jsonPath("$[0].deprecationDate",  is("2020-11-01T00:00:00.000+0000")))
 				//test na počet verzí a jejich hodnoty
 				.andExpect(jsonPath("$[1].versions", hasSize(1)))
-				.andExpect(jsonPath("$[0].versions[0]", is("0.9RC-1")))
-				.andExpect(jsonPath("$[0].versions[1]", is("1.0")))
 				.andExpect(jsonPath("$[1].id", is(2)))
 				.andExpect(jsonPath("$[1].hypeLevel",  is(EHypeLevel.NONE.name())))
 				.andExpect(jsonPath("$[1].deprecationDate",  nullValue()))
 				.andExpect(jsonPath("$[1].versions[0]", is("2018-01-01")))
 				.andExpect(jsonPath("$[1].name", is("Vue.js")));
+		
+
+		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		cal.clear();
+		cal.set(2030, 0, 1, 0, 0, 0);
+		JavaScriptFramework  framework = new JavaScriptFramework("JQuery", cal.getTime(), EHypeLevel.LOW);
+		framework.getVersions().add("1.0");
+		framework.getVersions().add("2.0");
+		framework.getVersions().add("3.0");
+		mockMvc.perform(post("/add").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(framework)))
+				.andDo(MockMvcResultHandlers.print())
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.id", is(3)))
+				.andExpect(jsonPath("$.name", is("JQuery")))
+				.andExpect(jsonPath("$.hypeLevel",  is(EHypeLevel.LOW.name())))
+				.andExpect(jsonPath("$.versions", hasSize(3)))
+				.andExpect(jsonPath("$.versions[0]", is("1.0")))
+				.andExpect(jsonPath("$.versions[1]", is("2.0")))
+				.andExpect(jsonPath("$.versions[2]", is("3.0")))
+				.andExpect(jsonPath("$.deprecationDate",  is("2030-01-01T00:00:00.000+0000")));
+
+		
+		//Test vyhledani frameworku podle nazvu
+		mockMvc.perform(get("/search/JQuery").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(framework)))
+		.andDo(MockMvcResultHandlers.print())
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$", hasSize(1)))
+		.andExpect(jsonPath("$[0].id", is(3)))
+		.andExpect(jsonPath("$[0].name", is("JQuery")))
+		.andExpect(jsonPath("$[0].hypeLevel",  is(EHypeLevel.LOW.name())))
+		.andExpect(jsonPath("$[0].versions", hasSize(3)))
+		.andExpect(jsonPath("$[0].versions[0]", is("1.0")))
+		.andExpect(jsonPath("$[0].versions[1]", is("2.0")))
+		.andExpect(jsonPath("$[0].versions[2]", is("3.0")))
+		.andExpect(jsonPath("$[0].deprecationDate",  is("2030-01-01T00:00:00.000+0000")));
+
+		//Test updatu
+		framework.setHypeLevel(EHypeLevel.NONSENSICAL);
+		mockMvc.perform(put("/frameworks/3").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(framework)))
+		.andDo(MockMvcResultHandlers.print())
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$.id", is(3)))
+		.andExpect(jsonPath("$.name", is("JQuery")))
+		.andExpect(jsonPath("$.hypeLevel",  is(EHypeLevel.NONSENSICAL.name())))
+		.andExpect(jsonPath("$.versions", hasSize(3)))
+		.andExpect(jsonPath("$.versions[0]", is("1.0")))
+		.andExpect(jsonPath("$.versions[1]", is("2.0")))
+		.andExpect(jsonPath("$.versions[2]", is("3.0")))
+		.andExpect(jsonPath("$.deprecationDate",  is("2030-01-01T00:00:00.000+0000")));
+		
+		//Test smazani
+		mockMvc.perform(delete("/frameworks/3").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(framework)))
+		.andDo(MockMvcResultHandlers.print())
+		.andExpect(status().isOk());
+			
+		//Po smazani uz tam nesmi byt zadny zaznam JQuery
+		mockMvc.perform(get("/search/JQuery").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(framework)))
+		.andDo(MockMvcResultHandlers.print())
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$", hasSize(0)));
 	}
 	
 	@Test
