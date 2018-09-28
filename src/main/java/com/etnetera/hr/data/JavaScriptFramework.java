@@ -33,21 +33,23 @@ public class JavaScriptFramework {
 	@Column(nullable = false, length = 30)
 	private String name;
 
-	//Pro jednoduchou kolekci jako je seznam verzí lze použít toto
-	@ElementCollection 
+	// Pro jednoduchou kolekci jako je seznam verzí lze použít toto
+	@ElementCollection
 	private List<String> versions = Lists.newArrayList();
-	//pokud by bylo třeba o verzi ukládat více informací jako např. datum vydání verze atd..
-	//pak by se musela použít další entita napr. JavaScriptFrameworkVersion která by nesla všechny tyto informace 
-	//a zde by bylo mapování pravděpodobně typu one-to-many na tuto entitu
-	
+	// pokud by bylo třeba o verzi ukládat více informací jako např. datum vydání
+	// verze atd..
+	// pak by se musela použít další entita napr. JavaScriptFrameworkVersion která
+	// by nesla všechny tyto informace
+	// a zde by bylo mapování pravděpodobně typu one-to-many na tuto entitu
+
 	private Date deprecationDate;
-	
-	//HyepeLevel může být uložen jako číslo a nebo jako Enum 
-	//prvně jsem to vyzkoušel s číslem a pak s Enumem.
-	//číslo má tu výhodu že ho lze
+
+	// HyepeLevel může být uložen jako číslo a nebo jako Enum
+	// prvně jsem to vyzkoušel s číslem a pak s Enumem.
+	// číslo má tu výhodu že ho lze
 //	private int hypeLevel;
 	private EHypeLevel hypeLevel;
-	
+
 	public JavaScriptFramework() {
 	}
 
@@ -60,11 +62,11 @@ public class JavaScriptFramework {
 	}
 
 	public JavaScriptFramework(String name, Date depricationDate, EHypeLevel hypeLevel) {
-		this.name = name;  
+		this.name = name;
 		setDeprecationDate(depricationDate);
 		setHypeLevel(hypeLevel);
 	}
-	
+
 //	public JavaScriptFramework(String name, Date depricationDate, int hypeLevel) {
 //		this.name = name;
 //		setDeprecationDate(depricationDate);
@@ -86,15 +88,15 @@ public class JavaScriptFramework {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public List<String> getVersions() {
 		return versions;
 	}
-	
+
 	public Date getDeprecationDate() {
 		return deprecationDate;
 	}
-	
+
 	public void setDeprecationDate(Date deprecationDate) {
 		this.deprecationDate = deprecationDate;
 	}
@@ -102,12 +104,12 @@ public class JavaScriptFramework {
 	public EHypeLevel getHypeLevel() {
 		return hypeLevel;
 	}
-	
+
 	public void setHypeLevel(EHypeLevel hypeLevel) {
 		this.hypeLevel = hypeLevel;
 	}
 
-	//GET a SET metody pro pripad ze hype level je  integer
+	// GET a SET metody pro pripad ze hype level je integer
 //	public int getHypeLevel() {
 //		return hypeLevel;
 //	}
@@ -115,21 +117,21 @@ public class JavaScriptFramework {
 //	public void setHypeLevel(int hypeLevel) {
 //		this.hypeLevel = hypeLevel;
 //	}
-	
-	//protected metoda slouzici k validaci objektu pred jeho ulozenim 
-	//pripadni potomci mohou pridavat validaci vlastnich fieldu
+
+	// protected metoda slouzici k validaci objektu pred jeho ulozenim
+	// pripadni potomci mohou pridavat validaci vlastnich fieldu
 	protected void doValidate(ValidationResult result) {
 		if (StringUtils.isEmpty(name)) {
 			result.addValidationError("name", "NotEmpty");
 		} else if (name.length() > 30) {
-			result.addValidationError("name", "Size");			
+			result.addValidationError("name", "Size");
 		}
 	}
-	
-	//metoda slouzi k overeni inegrity objektu (validace) pred jeho perzistenci
+
+	// metoda slouzi k overeni inegrity objektu (validace) pred jeho perzistenci
 	@PreUpdate
-    @PrePersist
-    private void validate() throws InvalidObjectException{
+	@PrePersist
+	private void validate() throws InvalidObjectException {
 		ValidationResult result = new ValidationResult();
 		doValidate(result);
 		if (!result.isValid()) {
@@ -148,7 +150,7 @@ public class JavaScriptFramework {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "JavaScriptFramework [id=" + id + ", name=" + name + "]";

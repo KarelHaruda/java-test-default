@@ -40,63 +40,67 @@ public class JavaScriptFrameworkController extends EtnRestController {
 	}
 
 	@GetMapping("/frameworks/{ID}")
-	public ResponseEntity<?>  getFramework(@PathVariable(value="ID") String id) {
+	public ResponseEntity<?> getFramework(@PathVariable(value = "ID") String id) {
 		try {
-			if(!repository.existsById(Long.valueOf(id))) {
-				throw new RuntimeException(String.format("Framework with ID %s not found!", id));				
+			if (!repository.existsById(Long.valueOf(id))) {
+				throw new RuntimeException(String.format("Framework with ID %s not found!", id));
 			}
 			JavaScriptFramework framework = repository.findById(Long.valueOf(id)).get();
 			return ResponseEntity.status(HttpStatus.OK).body(framework);
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getLocalizedMessage());			
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getLocalizedMessage());
 		}
 	}
 
 	@DeleteMapping("/frameworks/{ID}")
-	public ResponseEntity<?>  deleteFramework(@PathVariable(value="ID") String id) {
+	public ResponseEntity<?> deleteFramework(@PathVariable(value = "ID") String id) {
 		try {
-			repository.deleteById(Long.valueOf(id));			
+			repository.deleteById(Long.valueOf(id));
 			return ResponseEntity.status(HttpStatus.OK).body(null);
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getLocalizedMessage());			
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getLocalizedMessage());
 		}
 	}
 
-	@PutMapping("/frameworks/{ID}")  
-    public ResponseEntity<?> updateJavaSriptFrameword(@PathVariable(value="ID") String id, @RequestBody JavaScriptFramework framework) {
+	@PutMapping("/frameworks/{ID}")
+	public ResponseEntity<?> updateJavaSriptFrameword(@PathVariable(value = "ID") String id,
+			@RequestBody JavaScriptFramework framework) {
 		try {
 			JavaScriptFramework actualFramework = repository.findById(Long.valueOf(id)).get();
-			if(actualFramework == null) {
+			if (actualFramework == null) {
 				throw new RuntimeException(String.format("Framework with ID %s not found!", id));
 			}
 			actualFramework.assing(framework);
-			repository.save(actualFramework);		
+			repository.save(actualFramework);
 			return ResponseEntity.status(HttpStatus.OK).body(actualFramework);
 		} catch (InvalidObjectException e) {
-			//pokud to selze na chybu odpoved bude BAD REQUEST a v body bude popis chyby tak jak to vyzaduje unit test
+			// pokud to selze na chybu odpoved bude BAD REQUEST a v body bude popis chyby
+			// tak jak to vyzaduje unit test
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getValidationResult());
 		} catch (Exception e) {
-			//pokud to selze na chybu odpoved bude BAD REQUEST a v body bude popis chyby tak jak to vyzaduje unit test
+			// pokud to selze na chybu odpoved bude BAD REQUEST a v body bude popis chyby
+			// tak jak to vyzaduje unit test
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getLocalizedMessage());
 		}
-    }
-	
-	@PostMapping("/add")  
-    public ResponseEntity<?> addJavaSriptFrameword(@RequestBody JavaScriptFramework framework) {
+	}
+
+	@PostMapping("/add")
+	public ResponseEntity<?> addJavaSriptFrameword(@RequestBody JavaScriptFramework framework) {
 		try {
-			//Pokusime se ulozit predany objekt
-			repository.save(framework);			
+			// Pokusime se ulozit predany objekt
+			repository.save(framework);
 			return ResponseEntity.status(HttpStatus.CREATED).body(framework);
 		} catch (InvalidObjectException e) {
-			//pokud to selze na chybu odpoved bude BAD REQUEST a v body bude popis chyby tak jak to vyzaduje unit test
+			// pokud to selze na chybu odpoved bude BAD REQUEST a v body bude popis chyby
+			// tak jak to vyzaduje unit test
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getValidationResult());
 		}
-    }
+	}
 
 	@GetMapping("/search/{NAME}")
-	public Iterable<JavaScriptFramework> searchFrameworks(@PathVariable(value="NAME") String name) {
+	public Iterable<JavaScriptFramework> searchFrameworks(@PathVariable(value = "NAME") String name) {
 		List<JavaScriptFramework> result = new ArrayList<>();
-		for (JavaScriptFramework framework: repository.findAll()) {
+		for (JavaScriptFramework framework : repository.findAll()) {
 			if (framework.getName().contains(name)) {
 				result.add(framework);
 			}
