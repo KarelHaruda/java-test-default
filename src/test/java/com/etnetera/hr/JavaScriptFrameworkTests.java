@@ -122,7 +122,26 @@ public class JavaScriptFrameworkTests {
 				.andExpect(jsonPath("$.deprecationDate",  is("2030-01-01T00:00:00.000+0000")));
 
 		
-		//Test vyhledani frameworku podle nazvu
+		//Test nacteni frameworku s ID 3 - OK
+		mockMvc.perform(get("/frameworks/3").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(framework)))
+		.andDo(MockMvcResultHandlers.print())
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$.id", is(3)))
+		.andExpect(jsonPath("$.name", is("JQuery")))
+		.andExpect(jsonPath("$.hypeLevel",  is(EHypeLevel.LOW.name())))
+		.andExpect(jsonPath("$.versions", hasSize(3)))
+		.andExpect(jsonPath("$.versions[0]", is("1.0")))
+		.andExpect(jsonPath("$.versions[1]", is("2.0")))
+		.andExpect(jsonPath("$.versions[2]", is("3.0")))
+		.andExpect(jsonPath("$.deprecationDate",  is("2030-01-01T00:00:00.000+0000")));
+
+		//Test nacteni frameworku s ID 4 - NOT FOUND
+		//Nenalezeno
+		mockMvc.perform(get("/frameworks/4").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(framework)))
+		.andDo(MockMvcResultHandlers.print())
+		.andExpect(status().isNotFound());
+		
+		//Test vyhledani frameworku podle nazvu - OK
 		mockMvc.perform(get("/search/JQuery").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(framework)))
 		.andDo(MockMvcResultHandlers.print())
 		.andExpect(status().isOk())
@@ -136,7 +155,7 @@ public class JavaScriptFrameworkTests {
 		.andExpect(jsonPath("$[0].versions[2]", is("3.0")))
 		.andExpect(jsonPath("$[0].deprecationDate",  is("2030-01-01T00:00:00.000+0000")));
 
-		//Test updatu
+		//Test updatu - OK
 		framework.setHypeLevel(EHypeLevel.NONSENSICAL);
 		mockMvc.perform(put("/frameworks/3").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(framework)))
 		.andDo(MockMvcResultHandlers.print())
@@ -150,7 +169,7 @@ public class JavaScriptFrameworkTests {
 		.andExpect(jsonPath("$.versions[2]", is("3.0")))
 		.andExpect(jsonPath("$.deprecationDate",  is("2030-01-01T00:00:00.000+0000")));
 		
-		//Test smazani
+		//Test smazani - OK
 		mockMvc.perform(delete("/frameworks/3").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(framework)))
 		.andDo(MockMvcResultHandlers.print())
 		.andExpect(status().isOk());
