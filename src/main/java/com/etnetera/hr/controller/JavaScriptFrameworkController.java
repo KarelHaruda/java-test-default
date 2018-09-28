@@ -74,12 +74,11 @@ public class JavaScriptFrameworkController extends EtnRestController {
 			repository.save(actualFramework);
 			return ResponseEntity.status(HttpStatus.OK).body(actualFramework);
 		} catch (InvalidObjectException e) {
-			// pokud to selze na chybu odpoved bude BAD REQUEST a v body bude popis chyby
+			// pokud to selze na chybu validace odpoved bude BAD REQUEST a v body bude popis chyby
 			// tak jak to vyzaduje unit test
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getValidationResult());
 		} catch (Exception e) {
-			// pokud to selze na chybu odpoved bude BAD REQUEST a v body bude popis chyby
-			// tak jak to vyzaduje unit test
+			// pokud to selze na jinou chybu odpoved bude BAD REQUEST a v body text chyby
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getLocalizedMessage());
 		}
 	}
