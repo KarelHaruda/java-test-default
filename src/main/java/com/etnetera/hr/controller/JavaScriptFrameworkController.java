@@ -48,7 +48,7 @@ public class JavaScriptFrameworkController extends EtnRestController {
 			JavaScriptFramework framework = repository.findById(Long.valueOf(id)).get();
 			return ResponseEntity.status(HttpStatus.OK).body(framework);
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);			
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getLocalizedMessage());			
 		}
 	}
 
@@ -58,7 +58,7 @@ public class JavaScriptFrameworkController extends EtnRestController {
 			repository.deleteById(Long.valueOf(id));			
 			return ResponseEntity.status(HttpStatus.OK).body(null);
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());			
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getLocalizedMessage());			
 		}
 	}
 
@@ -77,7 +77,7 @@ public class JavaScriptFrameworkController extends EtnRestController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getValidationResult());
 		} catch (Exception e) {
 			//pokud to selze na chybu odpoved bude BAD REQUEST a v body bude popis chyby tak jak to vyzaduje unit test
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getLocalizedMessage());
 		}
     }
 	
