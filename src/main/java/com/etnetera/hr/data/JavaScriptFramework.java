@@ -62,7 +62,7 @@ public class JavaScriptFramework {
 	}
 
 	public JavaScriptFramework(String name, Date depricationDate, EHypeLevel hypeLevel) {
-		this.name = name;
+		setName(name);
 		setDeprecationDate(depricationDate);
 		setHypeLevel(hypeLevel);
 	}
