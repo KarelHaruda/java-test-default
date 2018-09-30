@@ -76,6 +76,10 @@ public class JavaScriptFrameworkController extends EtnRestController {
 		} catch (InvalidObjectException e) {
 			// pokud to selze na chybu validace odpoved bude BAD REQUEST a v body bude popis chyby
 			// tak jak to vyzaduje unit test
+			
+			//Protoze predek tohoto controleru EtnRestController obsluhuje vyjimku
+			//MethodArgumentNotValidException mozna by stacilo vyvolat tuto vyjimku a nechat 
+			//sestaveni chybove zpravy na teto obsluze
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getValidationResult());
 		} catch (Exception e) {
 			// pokud to selze na jinou chybu odpoved bude BAD REQUEST a v body text chyby
@@ -92,6 +96,10 @@ public class JavaScriptFrameworkController extends EtnRestController {
 		} catch (InvalidObjectException e) {
 			// pokud to selze na chybu odpoved bude BAD REQUEST a v body bude popis chyby
 			// tak jak to vyzaduje unit test
+			
+			//Protoze predek tohoto controleru EtnRestController obsluhuje vyjimku
+			//MethodArgumentNotValidException mozna by stacilo vyvolat tuto vyjimku a nechat 
+			//sestaveni chybove zpravy na teto obsluze
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getValidationResult());
 		}
 	}
